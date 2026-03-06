@@ -4,7 +4,7 @@ An intelligent planning system with web and terminal interfaces that creates per
 
 ## Features
 
-### 🌐 Web Interface
+### Web Interface
 - **Interactive Planning**: Question-by-question workflow with real-time chat interface
 - **Three Planning Types**: Study plans, project timelines, and semester planning
 - **Visual Design**: Modern gradient background with floating decorative animations
@@ -14,13 +14,13 @@ An intelligent planning system with web and terminal interfaces that creates per
 - **Technical Details**: Expandable MDP and HTN algorithm explanations
 - **Session Management**: Start new plans with a single click
 
-### 💻 Terminal Interface
+### Terminal Interface
 - **Interactive CLI**: Command-line planning tool for quick access
 - **Same Planning Types**: Study, project, and semester planning available
 - **Professional Output**: Clean, structured output with detailed breakdowns
 - **No Dependencies**: Works without browser or GUI
 
-### 📋 Planning Types
+### Planning Types
 
 #### 1. Study Planning
 Create detailed study schedules for exams or courses:
