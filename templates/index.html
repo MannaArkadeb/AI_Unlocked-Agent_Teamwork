@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planning Master</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Decorative Background Elements */
+        body::before {
+            content: '📅';
+            position: fixed;
+            font-size: 120px;
+            opacity: 0.28;
+            top: 10%;
+            left: 5%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        body::after {
+            content: '✏️';
+            position: fixed;
+            font-size: 100px;
+            opacity: 0.28;
+            bottom: 15%;
+            right: 8%;
+            animation: float 7s ease-in-out infinite;
+            animation-delay: 1s;
+        }
+
+        .bg-decoration {
+            position: fixed;
+            opacity: 0.25;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-checklist {
+            top: 20%;
+            right: 10%;
+            font-size: 18px;
+            color: white;
+            line-height: 2;
+            animation: float 8s ease-in-out infinite;
+            animation-delay: 2s;
+        }
+
+        .bg-checklist::before {
+            content: '☑ Plan your goals\A☑ Track progress\A☑ Achieve success\A☑ Stay organized';
+            white-space: pre;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            display: block;
+            backdrop-filter: blur(5px);
+        }
+
+        .bg-calendar {
+            bottom: 20%;
+            left: 8%;
+            font-size: 16px;
+            color: white;
+        }
+
+        .bg-calendar::before {
+            content: '📊 SCHEDULE\A─────────────\AMon  Tue  Wed\AThu   Fri   Sat\A─────────────';
+            white-space: pre;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            display: block;
+            font-family: monospace;
+            backdrop-filter: blur(5px);
+        }
+
+        .bg-notes {
+            top: 60%;
+            left: 3%;
+            animation: float 9s ease-in-out infinite;
+            animation-delay: 3s;
+        }
+
+        .bg-notes::before {
+            content: '📝';
+            font-size: 90px;
+        }
+
+        .bg-chart {
+            top: 5%;
+            right: 15%;
+            animation: float 7.5s ease-in-out infinite;
+            animation-delay: 1.5s;
+        }
+
+        .bg-chart::before {
+            content: '📈';
+            font-size: 80px;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-20px) rotate(5deg);
+            }
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .start-screen {
+            text-align: center;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 20px 50px;
+            font-size: 1.3em;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+        }
+
+        .chat-container {
+            display: none;
+        }
+
+        .chat-history {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .chat-message {
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .question {
+            background: #667eea;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 15px 15px 15px 0;
+            display: inline-block;
+            max-width: 80%;
+        }
+
+        .answer {
+            background: #e9ecef;
+            color: #333;
+            padding: 15px 20px;
+            border-radius: 15px 15px 0 15px;
+            display: inline-block;
+            max-width: 80%;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .question-container {
+            margin-bottom: 20px;
+        }
+
+        .question-text {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .choice-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .choice-btn {
+            background: white;
+            border: 2px solid #e9ecef;
+            padding: 15px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            font-size: 1em;
+        }
+
+        .choice-btn:hover {
+            border-color: #667eea;
+            background: #f8f9fa;
+        }
+
+        .choice-btn.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .plan-result {
+            display: none;
+        }
+
+        .plan-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .plan-header h2 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .timeline-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .timeline-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .timeline-item strong {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .timeline-item span {
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+
+        .plan-phase {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .plan-phase:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .phase-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .phase-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .difficulty-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .difficulty-easy {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .difficulty-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .difficulty-hard {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .phase-description {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .task-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .task-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .task-list li:last-child {
+            border-bottom: none;
+        }
+
+        .task-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .show-details-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .show-details-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .calendar-btn {
+            background: #6f42c1;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .calendar-btn:hover {
+            background: #5a32a3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(111, 66, 193, 0.4);
+        }
+
+        .new-plan-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .new-plan-btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4);
+        }
+
+        .download-btn {
+            background: #fd7e14;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            background: #e66a00;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(253, 126, 20, 0.4);
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            .bg-decoration, body::before, body::after {
+                display: none;
+            }
+            .action-buttons, .show-details-btn {
+                display: none;
+            }
+            .header {
+                background: #667eea;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+
+        .technical-details {
+            display: none;
+            margin-top: 30px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .detail-section {
+            margin-bottom: 30px;
+        }
+
+        .detail-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .detail-section h4 {
+            color: #333;
+            margin: 20px 0 10px 0;
+            font-size: 1.2em;
+        }
+
+        .detail-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .state-item,
+        .transition-item,
+        .milestone-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #e9ecef;
+        }
+
+        .task-item {
+            background: #f8f9fa;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .progress-bar {
+            background: #e9ecef;
+            height: 8px;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Decorative Background Elements -->
+    <div class="bg-decoration bg-checklist"></div>
+    <div class="bg-decoration bg-calendar"></div>
+    <div class="bg-decoration bg-notes"></div>
+    <div class="bg-decoration bg-chart"></div>
+
+    <div class="container">
+        <div class="header">
+            <h1>Planning Master</h1>
+            <p>Your intelligent planning assistant</p>
+        </div>
+
+        <div class="content">
+            <!-- Start Screen -->
+            <div class="start-screen" id="startScreen">
+                <p style="font-size: 1.2em; color: #666; margin-bottom: 30px;">
+                    Let's create a personalized plan for your goals
+                </p>
+                <button class="start-btn" onclick="startPlanning()">Start Planning</button>
+            </div>
+
+            <!-- Chat Interface -->
+            <div class="chat-container" id="chatContainer">
+                <div class="chat-history" id="chatHistory"></div>
+                
+                <div class="question-container" id="questionContainer">
+                    <div class="question-text" id="questionText"></div>
+                    <div class="input-group" id="inputGroup"></div>
+                    <button class="submit-btn" id="submitBtn" onclick="submitAnswer()">Submit</button>
+                </div>
+            </div>
+
+            <!-- Plan Result -->
+            <div class="plan-result" id="planResult">
+                <div class="plan-header" id="planHeader"></div>
+                <div id="planContent"></div>
+                
+                <div class="action-buttons">
+                    <button class="show-details-btn" id="showDetailsBtn" onclick="toggleDetails()">
+                        Show MDP & HTN Details
+                    </button>
+                    <button class="download-btn" onclick="downloadPlan()">
+                        📥 Download PDF
+                    </button>
+                    <button class="calendar-btn" onclick="addToCalendar()">
+                        📅 Add to Calendar
+                    </button>
+                </div>
+                
+                <button class="new-plan-btn" onclick="startNewPlan()">
+                    🔄 Start New Plan
+                </button>
+                
+                <div class="technical-details" id="technicalDetails"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let sessionId = null;
+        let currentQuestion = null;
+        let currentAnswer = null;
+        let chatHistory = [];
+
+        async function startPlanning() {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('chatContainer').style.display = 'block';
+
+            try {
+                const response = await fetch('/api/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                sessionId = data.session_id;
+                displayQuestion(data.question);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to start planning. Please try again.');
+            }
+        }
+
+        function displayQuestion(question) {
+            currentQuestion = question;
+            currentAnswer = null;
+
+            // Add question to chat history
+            addToChat('question', question.question);
+
+            // Update question text
+            document.getElementById('questionText').textContent = question.question;
+
+            // Create input based on type
+            const inputGroup = document.getElementById('inputGroup');
+            inputGroup.innerHTML = '';
+
+            if (question.type === 'choice') {
+                const choiceContainer = document.createElement('div');
+                choiceContainer.className = 'choice-options';
+
+                question.options.forEach(option => {
+                    const btn = document.createElement('button');
+                    btn.className = 'choice-btn';
+                    btn.textContent = option.label;
+                    btn.onclick = () => selectChoice(option.value, btn);
+                    choiceContainer.appendChild(btn);
+                });
+
+                inputGroup.appendChild(choiceContainer);
+            } else if (question.type === 'number') {
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.id = 'answerInput';
+                input.placeholder = question.placeholder || 'Enter a number';
+                if (question.min) input.min = question.min;
+                if (question.max) input.max = question.max;
+                if (question.step) input.step = question.step;
+                input.onchange = () => {
+                    currentAnswer = input.value;
+                };
+                inputGroup.appendChild(input);
+            } else {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.id = 'answerInput';
+                input.placeholder = question.placeholder || 'Enter your answer';
+                input.onchange = () => {
+                    currentAnswer = input.value;
+                };
+                inputGroup.appendChild(input);
+            }
+        }
+
+        function selectChoice(value, button) {
+            // Remove selection from all buttons
+            document.querySelectorAll('.choice-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+
+            // Add selection to clicked button
+            button.classList.add('selected');
+            currentAnswer = value;
+        }
+
+        function addToChat(type, message) {
+            const chatHistoryDiv = document.getElementById('chatHistory');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message';
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = type;
+            contentDiv.textContent = message;
+
+            messageDiv.appendChild(contentDiv);
+            chatHistoryDiv.appendChild(messageDiv);
+
+            // Scroll to bottom
+            chatHistoryDiv.scrollTop = chatHistoryDiv.scrollHeight;
+        }
+
+        async function submitAnswer() {
+            if (!currentAnswer) {
+                alert('Please provide an answer');
+                return;
+            }
+
+            // Add answer to chat history
+            const answerText = currentAnswer;
+            if (currentQuestion.type === 'choice') {
+                const option = currentQuestion.options.find(opt => opt.value === currentAnswer);
+                addToChat('answer', option ? option.label : currentAnswer);
+            } else {
+                addToChat('answer', currentAnswer);
+            }
+
+            // Show loading
+            document.getElementById('questionContainer').innerHTML = '<div class="loading"><div class="spinner"></div><p>Processing...</p></div>';
+
+            try {
+                const response = await fetch('/api/answer', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        question_id: currentQuestion.id,
+                        answer: currentAnswer
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.complete) {
+                    // Show plan
+                    displayPlan(data.plan);
+                } else {
+                    // Show next question
+                    setTimeout(() => {
+                        document.getElementById('questionContainer').innerHTML = `
+                            <div class="question-text" id="questionText"></div>
+                            <div class="input-group" id="inputGroup"></div>
+                            <button class="submit-btn" id="submitBtn" onclick="submitAnswer()">Submit</button>
+                        `;
+                        displayQuestion(data.question);
+                    }, 500);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to submit answer. Please try again.');
+            }
+        }
+
+        function displayPlan(plan) {
+            document.getElementById('chatContainer').style.display = 'none';
+            document.getElementById('planResult').style.display = 'block';
+
+            // Store plan globally for download
+            window.currentPlan = plan;
+
+            // Display plan header
+            let headerHTML = '';
+            
+            if (plan.category === 'semester') {
+                headerHTML = `
+                    <h2>Semester Planning</h2>
+                    <p>${plan.num_subjects} Subjects: ${plan.subjects.join(', ')}</p>
+                    <div class="timeline-info">
+                        <div class="timeline-item">
+                            <strong>Duration</strong>
+                            <span>${plan.timeline.total_weeks} weeks</span>
+                        </div>
+                        <div class="timeline-item">
+                            <strong>Daily Hours</strong>
+                            <span>${plan.timeline.hours_per_day} hrs</span>
+                        </div>
+                        <div class="timeline-item">
+                            <strong>Mid-Sem</strong>
+                            <span>${plan.midsem_dates}</span>
+                        </div>
+                        <div class="timeline-item">
+                            <strong>End-Sem</strong>
+                            <span>${plan.endsem_dates}</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                headerHTML = `
+                    <h2>${plan.category === 'study' ? plan.subject : plan.project_name}</h2>
+                    <p>${plan.category === 'study' ? 'Study Plan' : 'Project Plan'}</p>
+                    <div class="timeline-info">
+                        <div class="timeline-item">
+                            <strong>Duration</strong>
+                            <span>${plan.timeline.total_days} days</span>
+                        </div>
+                        <div class="timeline-item">
+                            <strong>Daily Hours</strong>
+                            <span>${plan.timeline.hours_per_day} hrs</span>
+                        </div>
+                        <div class="timeline-item">
+                            <strong>Total Hours</strong>
+                            <span>${plan.timeline.total_hours} hrs</span>
+                        </div>
+                        <div class="timeline-item">
+                            <strong>Deadline</strong>
+                            <span>${plan.timeline.deadline}</span>
+                        </div>
+                    </div>
+                `;
+            }
+            document.getElementById('planHeader').innerHTML = headerHTML;
+
+            // Display plan phases
+            let planContentHTML = '<h3 style="margin-bottom: 20px; color: #333;">Your Strategy</h3>';
+            plan.plan.forEach(phase => {
+                const difficultyClass = `difficulty-${phase.difficulty.toLowerCase()}`;
+                const timeLabel = plan.category === 'semester' ? `⏱️ ${phase.hours} hours/week` : `⏱️ ${phase.hours} hours`;
+                planContentHTML += `
+                    <div class="plan-phase">
+                        <div class="phase-header">
+                            <div class="phase-title">${phase.phase}</div>
+                            <div class="difficulty-badge ${difficultyClass}">${phase.difficulty}</div>
+                        </div>
+                        <div class="phase-description">${phase.description}</div>
+                        <ul class="task-list">
+                            ${phase.tasks.map(task => `<li>${task}</li>`).join('')}
+                        </ul>
+                        <div style="margin-top: 10px; color: #666; font-size: 0.9em;">
+                            ${timeLabel}
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('planContent').innerHTML = planContentHTML;
+
+            // Store technical details
+            window.mdpDetails = plan.mdp_details;
+            window.htnDetails = plan.htn_details;
+        }
+
+        function toggleDetails() {
+            const detailsDiv = document.getElementById('technicalDetails');
+            const btn = document.getElementById('showDetailsBtn');
+
+            if (detailsDiv.style.display === 'none' || detailsDiv.style.display === '') {
+                // Show details
+                displayTechnicalDetails();
+                detailsDiv.style.display = 'block';
+                btn.textContent = 'Hide MDP & HTN Details';
+            } else {
+                // Hide details
+                detailsDiv.style.display = 'none';
+                btn.textContent = 'Show MDP & HTN Details';
+            }
+        }
+
+        function displayTechnicalDetails() {
+            const mdp = window.mdpDetails;
+            const htn = window.htnDetails;
+
+            let html = `
+                <div class="detail-section">
+                    <h3>🔄 MDP (Markov Decision Process) Details</h3>
+                    <div class="detail-content">
+                        <p><strong>Description:</strong> ${mdp.description}</p>
+                        <p><strong>Total States:</strong> ${mdp.total_states}</p>
+                        <p><strong>Reward Function:</strong> ${mdp.reward_function}</p>
+                        <p><strong>Discount Factor:</strong> ${mdp.discount_factor}</p>
+                        <p><strong>Optimal Policy:</strong> ${mdp.optimal_policy}</p>
+                        
+                        <h4>States:</h4>
+                        ${mdp.states.map(state => `
+                            <div class="state-item">
+                                <strong>${state.id}:</strong> ${state.name}<br>
+                                <em>${state.description}</em> (${state.difficulty})
+                            </div>
+                        `).join('')}
+                        
+                        <h4>State Transitions:</h4>
+                        ${mdp.transitions.slice(0, 10).map(trans => `
+                            <div class="transition-item">
+                                <strong>${trans.from} → ${trans.to}</strong><br>
+                                Action: ${trans.action}<br>
+                                Reward: ${trans.reward} | Probability: ${trans.probability}
+                            </div>
+                        `).join('')}
+                        ${mdp.transitions.length > 10 ? `<p><em>... and ${mdp.transitions.length - 10} more transitions</em></p>` : ''}
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h3>🌳 HTN (Hierarchical Task Network) Details</h3>
+                    <div class="detail-content">
+                        <p><strong>Description:</strong> ${htn.description}</p>
+                        <p><strong>Goal:</strong> ${htn.goal}</p>
+                        <p><strong>Total Milestones:</strong> ${htn.total_milestones}</p>
+                        <p><strong>Decomposition Method:</strong> ${htn.decomposition_method}</p>
+                        <p><strong>Task Dependencies:</strong> ${htn.task_dependencies}</p>
+                        
+                        <h4>Hierarchical Breakdown:</h4>
+                        ${htn.milestones.map(milestone => `
+                            <div class="milestone-item">
+                                <h4 style="color: #667eea; margin-top: 0;">${milestone.milestone}</h4>
+                                <p>${milestone.description}</p>
+                                <p><strong>Number of Tasks:</strong> ${milestone.task_count}</p>
+                                ${milestone.tasks.slice(0, 3).map(task => `
+                                    <div class="task-item">
+                                        <strong>${task.name}</strong><br>
+                                        Effort: ${task.effort_hours} hours<br>
+                                        Skills: ${task.skills_required.join(', ')}
+                                        <ul style="margin: 5px 0 0 20px;">
+                                            ${task.subtasks.slice(0, 2).map(st => `<li>${st}</li>`).join('')}
+                                        </ul>
+                                    </div>
+                                `).join('')}
+                                ${milestone.tasks.length > 3 ? `<p><em>... and ${milestone.tasks.length - 3} more tasks</em></p>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('technicalDetails').innerHTML = html;
+        }
+
+        function startNewPlan() {
+            // Refresh the page to start over
+            if (confirm('Are you sure you want to start a new plan? Current plan will be lost.')) {
+                window.location.reload();
+            }
+        }
+
+        function downloadPlan() {
+            // Get the plan data
+            const plan = window.currentPlan;
+            if (!plan) {
+                alert('No plan available to download');
+                return;
+            }
+
+            try {
+                // Use jsPDF if available, otherwise fall back to print
+                if (typeof jspdf === 'undefined') {
+                    window.print();
+                    return;
+                }
+
+                const { jsPDF } = jspdf;
+                const doc = new jsPDF();
+                
+                let yPos = 20;
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const margin = 20;
+                const maxWidth = pageWidth - 2 * margin;
+
+                // Title
+                doc.setFontSize(24);
+                doc.setTextColor(102, 126, 234);
+                doc.text('Planning Master', margin, yPos);
+                yPos += 10;
+
+                // Plan Title
+                doc.setFontSize(18);
+                doc.setTextColor(50, 50, 50);
+                let planTitle = '';
+                if (plan.category === 'study') {
+                    planTitle = plan.subject;
+                } else if (plan.category === 'project') {
+                    planTitle = plan.project_name;
+                } else if (plan.category === 'semester') {
+                    planTitle = 'Semester Plan';
+                }
+                doc.text(planTitle, margin, yPos);
+                yPos += 8;
+
+                // Plan Type
+                doc.setFontSize(12);
+                doc.setTextColor(100, 100, 100);
+                let planType = '';
+                if (plan.category === 'study') {
+                    planType = 'Study Plan';
+                } else if (plan.category === 'project') {
+                    planType = 'Project Plan';
+                } else if (plan.category === 'semester') {
+                    planType = `${plan.num_subjects} Subjects: ${plan.subjects.join(', ')}`;
+                }
+                doc.text(planType, margin, yPos);
+                yPos += 15;
+
+                // Timeline Info
+                doc.setFontSize(11);
+                doc.setTextColor(80, 80, 80);
+                if (plan.category === 'semester') {
+                    doc.text(`Duration: ${plan.timeline.total_weeks} weeks`, margin, yPos);
+                    doc.text(`Daily Hours: ${plan.timeline.hours_per_day} hrs`, margin + 70, yPos);
+                    yPos += 6;
+                    doc.text(`Mid-Sem: ${plan.midsem_dates}`, margin, yPos);
+                    yPos += 6;
+                    doc.text(`End-Sem: ${plan.endsem_dates}`, margin, yPos);
+                } else {
+                    doc.text(`Duration: ${plan.timeline.total_days} days`, margin, yPos);
+                    doc.text(`Daily Hours: ${plan.timeline.hours_per_day} hrs`, margin + 70, yPos);
+                    yPos += 6;
+                    doc.text(`Total Hours: ${plan.timeline.total_hours} hrs`, margin, yPos);
+                    doc.text(`Deadline: ${plan.timeline.deadline}`, margin + 70, yPos);
+                }
+                yPos += 15;
+
+                // Strategy Title
+                doc.setFontSize(14);
+                doc.setTextColor(102, 126, 234);
+                doc.text('Your Strategy', margin, yPos);
+                yPos += 10;
+
+                // Plan Phases
+                doc.setFontSize(10);
+                plan.plan.forEach((phase, index) => {
+                    // Check if we need a new page
+                    if (yPos > 270) {
+                        doc.addPage();
+                        yPos = 20;
+                    }
+
+                    // Phase Title
+                    doc.setFontSize(11);
+                    doc.setTextColor(50, 50, 50);
+                    doc.text(phase.phase, margin, yPos);
+                    yPos += 6;
+
+                    // Difficulty
+                    doc.setFontSize(9);
+                    doc.setTextColor(100, 100, 100);
+                    doc.text(`[${phase.difficulty}]`, margin, yPos);
+                    yPos += 5;
+
+                    // Description
+                    doc.setFontSize(9);
+                    doc.setTextColor(120, 120, 120);
+                    const descLines = doc.splitTextToSize(phase.description, maxWidth);
+                    doc.text(descLines, margin, yPos);
+                    yPos += descLines.length * 5;
+
+                    // Tasks
+                    doc.setFontSize(9);
+                    doc.setTextColor(80, 80, 80);
+                    phase.tasks.forEach(task => {
+                        if (yPos > 270) {
+                            doc.addPage();
+                            yPos = 20;
+                        }
+                        const taskLines = doc.splitTextToSize(`✓ ${task}`, maxWidth - 5);
+                        doc.text(taskLines, margin + 3, yPos);
+                        yPos += taskLines.length * 5;
+                    });
+
+                    // Hours
+                    doc.setTextColor(100, 100, 100);
+                    doc.text(`⏱ ${phase.hours} hours`, margin, yPos);
+                    yPos += 10;
+                });
+
+                // Save the PDF
+                let fileName = '';
+                if (plan.category === 'study') {
+                    fileName = `PlanningMaster_${plan.subject.replace(/\s+/g, '_')}_${plan.timeline.deadline}.pdf`;
+                } else if (plan.category === 'project') {
+                    fileName = `PlanningMaster_${plan.project_name.replace(/\s+/g, '_')}_${plan.timeline.deadline}.pdf`;
+                } else if (plan.category === 'semester') {
+                    fileName = `PlanningMaster_Semester_${plan.timeline.deadline}.pdf`;
+                }
+                doc.save(fileName);
+
+            } catch (error) {
+                console.error('PDF generation failed:', error);
+                // Fallback to print
+                if (confirm('PDF generation failed. Would you like to print instead?')) {
+                    window.print();
+                }
+            }
+        }
+
+        function addToCalendar() {
+            const plan = window.currentPlan;
+            if (!plan) {
+                alert('No plan available to add to calendar');
+                return;
+            }
+
+            try {
+                // Create iCalendar format
+                let icsContent = 'BEGIN:VCALENDAR\r\n';
+                icsContent += 'VERSION:2.0\r\n';
+                icsContent += 'PRODID:-//Planning Master//EN\r\n';
+                icsContent += 'CALSCALE:GREGORIAN\r\n';
+                icsContent += 'METHOD:PUBLISH\r\n';
+                icsContent += 'X-WR-CALNAME:Planning Master - ' + (plan.category === 'study' ? plan.subject : plan.project_name) + '\r\n';
+                icsContent += 'X-WR-TIMEZONE:UTC\r\n';
+
+                // Get start date (today)
+                const startDate = new Date();
+                startDate.setHours(9, 0, 0, 0); // Default start time 9:00 AM
+
+                // Add each phase as a calendar event
+                plan.plan.forEach((phase, index) => {
+                    const eventDate = new Date(startDate);
+                    
+                    // Handle different plan types
+                    if (plan.category === 'semester') {
+                        // For semester plans, use week number
+                        eventDate.setDate(startDate.getDate() + (phase.week - 1) * 7);
+                    } else {
+                        // For study/project plans, use day number
+                        eventDate.setDate(startDate.getDate() + phase.day - 1);
+                    }
+                    
+                    const eventEndDate = new Date(eventDate);
+                    
+                    // For semester plans, event spans the whole week
+                    if (plan.category === 'semester') {
+                        eventEndDate.setDate(eventDate.getDate() + 6); // 7 days total
+                        eventEndDate.setHours(23, 59, 59, 999);
+                    } else {
+                        eventEndDate.setHours(eventDate.getHours() + Math.floor(phase.hours));
+                        eventEndDate.setMinutes(Math.round((phase.hours % 1) * 60));
+                    }
+
+                    // Format dates for iCal (YYYYMMDDTHHMMSS)
+                    const formatDate = (date) => {
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        const hours = String(date.getHours()).padStart(2, '0');
+                        const minutes = String(date.getMinutes()).padStart(2, '0');
+                        const seconds = String(date.getSeconds()).padStart(2, '0');
+                        return `${year}${month}${day}T${hours}${minutes}${seconds}`;
+                    };
+
+                    const uid = `planning-master-${Date.now()}-${index}@planningmaster.com`;
+                    const now = formatDate(new Date());
+
+                    icsContent += 'BEGIN:VEVENT\r\n';
+                    icsContent += `UID:${uid}\r\n`;
+                    icsContent += `DTSTAMP:${now}\r\n`;
+                    icsContent += `DTSTART:${formatDate(eventDate)}\r\n`;
+                    icsContent += `DTEND:${formatDate(eventEndDate)}\r\n`;
+                    icsContent += `SUMMARY:${phase.phase}\r\n`;
+                    
+                    // Add description with tasks
+                    let description = phase.description + '\\n\\n';
+                    description += 'Tasks:\\n';
+                    phase.tasks.forEach(task => {
+                        description += '- ' + task + '\\n';
+                    });
+                    description += '\\nDifficulty: ' + phase.difficulty;
+                    if (plan.category === 'semester') {
+                        description += '\\nDuration: ' + phase.hours + ' hours/week';
+                    } else {
+                        description += '\\nDuration: ' + phase.hours + ' hours';
+                    }
+                    
+                    icsContent += `DESCRIPTION:${description}\r\n`;
+                    icsContent += `LOCATION:${plan.category === 'study' || plan.category === 'semester' ? 'Study' : 'Work'}\r\n`;
+                    icsContent += `STATUS:CONFIRMED\r\n`;
+                    
+                    // Add alarm/reminder 1 hour before
+                    icsContent += 'BEGIN:VALARM\r\n';
+                    icsContent += 'TRIGGER:-PT1H\r\n';
+                    icsContent += 'ACTION:DISPLAY\r\n';
+                    icsContent += `DESCRIPTION:Reminder: ${phase.phase}\r\n`;
+                    icsContent += 'END:VALARM\r\n';
+                    
+                    icsContent += 'END:VEVENT\r\n';
+                });
+
+                icsContent += 'END:VCALENDAR\r\n';
+
+                // Create blob and download
+                const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+                const link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                let fileName = '';
+                if (plan.category === 'study') {
+                    fileName = `PlanningMaster_${plan.subject.replace(/\s+/g, '_')}.ics`;
+                } else if (plan.category === 'project') {
+                    fileName = `PlanningMaster_${plan.project_name.replace(/\s+/g, '_')}.ics`;
+                } else if (plan.category === 'semester') {
+                    fileName = `PlanningMaster_Semester.ics`;
+                }
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                alert('Calendar file downloaded! You can now import it into Google Calendar, Outlook, or any calendar app.\n\nTo import:\n- Google Calendar: Settings > Import & Export > Select file\n- Outlook: File > Open & Export > Import/Export\n- Apple Calendar: File > Import');
+
+            } catch (error) {
+                console.error('Calendar generation failed:', error);
+                alert('Failed to generate calendar file. Please try again.');
+            }
+        }
+    </script>
+</body>
+</html>
