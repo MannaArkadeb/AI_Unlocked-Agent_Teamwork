@@ -798,4 +798,8 @@ def get_plan():
     return jsonify(plan)
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Use environment variable for port (required by Render)
+    port = int(os.environ.get('PORT', 5000))
+    # Disable debug in production
+    debug = os.environ.get('FLASK_ENV') == 'development'
+    app.run(debug=debug, host='0.0.0.0', port=port)

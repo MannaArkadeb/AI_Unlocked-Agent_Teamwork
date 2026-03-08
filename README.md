@@ -300,6 +300,18 @@ python -m pytest tests/test_system.py -v
 - **HTN**: Modify `_generate_htn_details()` in `app.py`
 - **Core Logic**: Edit `src/planner.py` for underlying algorithms
 
+## Deployment
+
+### Deploy to Render (Recommended)
+
+1. Push your code to GitHub
+2. Sign up at [render.com](https://render.com)
+3. Create a new Web Service and connect your GitHub repository
+4. Render will auto-detect the configuration from `render.yaml`
+5. Your app will be live at `https://your-app-name.onrender.com`
+
+**Note**: Free tier spins down after 15 minutes of inactivity. First request may take ~30 seconds to wake up.
+
 ## License
 
 This project is a prototype implementation for educational and research purposes.
